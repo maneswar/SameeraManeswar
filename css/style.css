@@ -119,13 +119,19 @@ ul{list-style:none;margin:0;padding:0}
 .tera.gone{display:none}
 body.locked{overflow:hidden}
 
-/* ---------- photo blend ---------- */
-.blend{position:relative;isolation:isolate}
-.blend img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(1.04) contrast(1.02) brightness(1.03)}
-.blend::before{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 52% 46% at 50% 40%,transparent 42%,rgba(250,243,230,.60) 72%,rgba(250,243,230,.98) 100%)}
-.blend::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(158deg,rgba(224,168,40,.14),rgba(176,27,51,.05) 55%,transparent);mix-blend-mode:soft-light}
-.blend.cut::before,.blend.cut::after{display:none}
-.blend.cut img{object-fit:contain;filter:drop-shadow(0 16px 36px rgba(92,60,24,.32)) saturate(1.02) contrast(1.02)}
+/* ---------- photo frame (clean, crisp) ---------- */
+.blend{
+  position:relative;isolation:isolate;overflow:hidden;border-radius:6px;
+  border:6px solid var(--jasmine);
+  box-shadow:0 26px 54px -20px rgba(90,20,30,.38), 0 0 0 1px rgba(140,94,20,.16);
+  background:var(--jasmine);
+}
+.blend img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(1.06) contrast(1.04);transition:transform .7s var(--ease)}
+.blend:hover img{transform:scale(1.045)}
+.blend::after{content:"";position:absolute;inset:6px;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(233,180,76,.55)}
+.blend.cut{border:none;box-shadow:none;background:transparent;border-radius:0}
+.blend.cut::after{display:none}
+.blend.cut img{object-fit:contain;filter:drop-shadow(0 22px 42px rgba(60,30,15,.35))}
 .glow{position:absolute;inset:-28%;background:radial-gradient(circle at 50% 46%,rgba(224,168,40,.30),rgba(176,27,51,.10) 46%,transparent 72%);filter:blur(16px);animation:breathe 7.5s ease-in-out infinite}
 @keyframes breathe{0%,100%{opacity:.68;scale:1}50%{opacity:1;scale:1.07}}
 
@@ -223,18 +229,6 @@ body.locked{overflow:hidden}
 .btn.solid{background:var(--accent,var(--gold));border-color:var(--accent,var(--gold));color:var(--jasmine)}
 .btn.solid:hover{filter:brightness(1.12)}
 .btn svg{width:13px;height:13px;flex:none}
-
-/* ---------- GALLERY ---------- */
-.gallery-section{background:linear-gradient(180deg,transparent,rgba(140,94,20,.05) 50%,transparent)}
-.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
-.gallery-item{border-radius:4px;overflow:hidden;box-shadow:var(--shadow-soft);border:4px solid var(--jasmine);cursor:pointer;aspect-ratio:3/4}
-.gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
-.gallery-item:hover img{transform:scale(1.09)}
-@media (max-width:720px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
-.lightbox{position:fixed;inset:0;background:rgba(30,10,15,.92);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;padding:30px}
-.lightbox.open{opacity:1;visibility:visible}
-.lightbox img{max-width:90vw;max-height:85vh;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-#lightboxClose{position:absolute;top:24px;right:30px;background:none;border:none;color:var(--jasmine);font-size:36px;cursor:pointer;line-height:1}
 
 /* ---------- CLOSE / RSVP ---------- */
 .close{text-align:center;padding-bottom:clamp(4rem,12vw,7rem)}

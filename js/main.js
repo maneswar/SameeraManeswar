@@ -18,14 +18,6 @@ const EVENTS = [
     accent:"#8A5F33", motif:"thread"
   },
   {
-    te:"వధువు వేడుక", en:"Pellikuturu",
-    note:"Sameera's own ceremony, surrounded by her family in Rajahmundry.",
-    date:"Sunday, 23 August 2026", time:"",
-    venue:"Lalitha Nagar", address:"Near Chaitanya Hospital, Rajahmundry, Andhra Pradesh",
-    mapQuery:"Lalitha Nagar, near Chaitanya Hospital, Rajahmundry",
-    accent:"#A24A63", motif:"henna"
-  },
-  {
     te:"పసుపు కుంకుమ", en:"Haldi, Mehendi & Sangeet",
     note:"Turmeric, henna, and music that runs late.",
     date:"Wednesday, 26 August 2026", time:"",
@@ -186,7 +178,7 @@ if(evList){
     <article class="event rv" style="--accent:${e.accent}" data-ev="${i}">
       <svg class="motif" viewBox="0 0 200 200" aria-hidden="true">${MOTIFS[e.motif]}</svg>
       <div class="ev-body">
-        <p class="ev-no">Event ${["one","two","three","four"][i]}</p>
+        <p class="ev-no">Event ${["one","two","three"][i]}</p>
         <h3 class="te">${e.te}</h3>
         <p class="en">${e.en}</p>
         <div class="ev-meta">
@@ -235,22 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
     navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
     navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
   }
-
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightboxImg');
-  const lightboxClose = document.getElementById('lightboxClose');
-  if(lightbox){
-    document.querySelectorAll('.gallery-item img').forEach(img => {
-      img.addEventListener('click', () => {
-        lightboxImg.src = img.src; lightboxImg.alt = img.alt;
-        lightbox.classList.add('open');
-      });
-    });
-    function closeLightbox(){ lightbox.classList.remove('open'); lightboxImg.src=''; }
-    lightboxClose.addEventListener('click', closeLightbox);
-    lightbox.addEventListener('click', e => { if(e.target===lightbox) closeLightbox(); });
-    document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
-  }
 });
 
 /* ---------------- PHOTO BLEND injection ---------------- */
@@ -270,6 +246,30 @@ document.addEventListener("DOMContentLoaded", () => {
   put("midArt","assets/img/candid-laugh.jpg",ALT,false);
   put("bandFig","assets/img/bench-wide.jpg",ALT,false);
   put("closeArt","assets/img/hero-traditional.jpg",ALT,false);
+})();
+
+/* ---------------- HERO parallax (desktop pointer only) ---------------- */
+(function heroParallax(){
+  if(RM || !matchMedia("(pointer:fine)").matches) return;
+  const hero=document.querySelector(".hero");
+  const art=document.getElementById("heroArt");
+  const photo=art ? art.querySelector(".blend") : null;
+  const muggu=document.getElementById("muggu");
+  if(!hero || !art) return;
+  let tx=0,ty=0,qx=0,qy=0;
+  hero.addEventListener("mousemove", e=>{
+    const r=hero.getBoundingClientRect();
+    tx=((e.clientX-r.left)/r.width-.5)*2;
+    ty=((e.clientY-r.top)/r.height-.5)*2;
+  });
+  hero.addEventListener("mouseleave", ()=>{ tx=0; ty=0; });
+  function tick(){
+    qx=lerp(qx,tx,.06); qy=lerp(qy,ty,.06);
+    if(photo) photo.style.transform = `translate3d(${(qx*9).toFixed(2)}px,${(qy*7).toFixed(2)}px,0)`;
+    if(muggu) muggu.style.transform = `translate3d(${(qx*-6).toFixed(2)}px,${(qy*-6).toFixed(2)}px,0)`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 })();
 
 /* ---------------- REVEALS + THREAD GROWTH + EVENT LIGHTING ---------------- */
