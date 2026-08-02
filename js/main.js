@@ -54,65 +54,6 @@ const MUSIC_URL = "song.mp3";
   svg.innerHTML = parts.join("");
 })();
 
-/* ---------------- MUGGU: a rangoli that draws itself ---------------- */
-(function muggu(){
-  const svg=document.getElementById("muggu");
-  if(!svg) return;
-  const C=200, inner=[], outer=[];
-  const P=(buf,d,w=1)=>buf.push(`<path d="${d}" stroke-width="${w}"/>`);
-
-  for(let r=1;r<=5;r++){
-    const n=r*6, rad=r*26;
-    for(let i=0;i<n;i++){
-      const a=(i/n)*Math.PI*2;
-      inner.push(`<circle class="dot" cx="${(C+Math.cos(a)*rad).toFixed(1)}" cy="${(C+Math.sin(a)*rad).toFixed(1)}" r="1.1"/>`);
-    }
-  }
-  for(let i=0;i<8;i++){
-    const a=(i/8)*Math.PI*2;
-    const x=C+Math.cos(a)*30, y=C+Math.sin(a)*30;
-    const cx1=C+Math.cos(a-.42)*54, cy1=C+Math.sin(a-.42)*54;
-    const cx2=C+Math.cos(a+.42)*54, cy2=C+Math.sin(a+.42)*54;
-    P(inner,`M${C} ${C} Q${cx1.toFixed(1)} ${cy1.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)} Q${cx2.toFixed(1)} ${cy2.toFixed(1)} ${C} ${C} Z`,1.2);
-  }
-  for(let ring=0;ring<2;ring++){
-    const n=8+ring*8, rad=78+ring*46, amp=20+ring*8;
-    let d="";
-    for(let i=0;i<=n;i++){
-      const a=(i/n)*Math.PI*2, rr=rad+(i%2?amp:-amp);
-      const x=C+Math.cos(a)*rr, y=C+Math.sin(a)*rr;
-      d += (i? " Q"+(C+Math.cos(a-Math.PI/n)*(rad+amp*1.5)).toFixed(1)+" "+(C+Math.sin(a-Math.PI/n)*(rad+amp*1.5)).toFixed(1)+" ":"M")+x.toFixed(1)+" "+y.toFixed(1);
-    }
-    P(outer,d+" Z",1);
-  }
-  outer.push(`<circle cx="${C}" cy="${C}" r="176" stroke-width=".8"/>`);
-  outer.push(`<circle cx="${C}" cy="${C}" r="184" stroke-width=".5"/>`);
-  for(let i=0;i<24;i++){
-    const a=(i/24)*Math.PI*2;
-    outer.push(`<circle class="dot" cx="${(C+Math.cos(a)*180).toFixed(1)}" cy="${(C+Math.sin(a)*180).toFixed(1)}" r="1.4"/>`);
-  }
-  svg.innerHTML = `<g class="spin-r">${inner.join("")}</g><g class="spin">${outer.join("")}</g>`;
-
-  const paths=[...svg.querySelectorAll("path, circle:not(.dot)")];
-  paths.forEach((p,i)=>{
-    const len = p.getTotalLength ? p.getTotalLength() : 1200;
-    p.style.strokeDasharray=len;
-    p.style.strokeDashoffset=RM?0:len;
-    if(!RM){
-      p.style.transition=`stroke-dashoffset 2.6s cubic-bezier(.22,.61,.36,1) ${1.75+i*0.05}s`;
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.strokeDashoffset=0}));
-    }
-  });
-  const dots=[...svg.querySelectorAll(".dot")];
-  dots.forEach((d,i)=>{
-    d.style.opacity=RM?1:0;
-    if(!RM){
-      d.style.transition=`opacity .8s ease ${1.8+i*0.009}s`;
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=1}));
-    }
-  });
-})();
-
 /* ---------------- NAMES, letter by letter ---------------- */
 (function letters(){
   const h=document.getElementById("names");
@@ -140,8 +81,7 @@ const MUSIC_URL = "song.mp3";
 (function tera(){
   const el=document.getElementById("tera");
   const names=document.getElementById("names");
-  const hero=document.getElementById("heroArt");
-  const lightUp=()=>{ names&&names.classList.add("lit"); hero&&hero.classList.add("lit"); };
+  const lightUp=()=>{ names&&names.classList.add("lit"); };
   if(!el){ lightUp(); return; }
   if(RM){ el.classList.add("gone"); lightUp(); return; }
 
@@ -249,14 +189,20 @@ document.addEventListener("DOMContentLoaded", () => {
   put("closeArt","assets/img/hero-traditional.jpg",ALT,false);
 })();
 
-/* ---------------- HERO parallax (desktop pointer only) ---------------- */
-(function heroParallax(){
-  if(RM || !matchMedia("(pointer:fine)").matches) return;
+/* ---------------- HERO video: subtle parallax + pause off-screen ---------------- */
+(function heroVideoFx(){
   const hero=document.querySelector(".hero");
-  const art=document.getElementById("heroArt");
-  const photo=art ? art.querySelector(".hero-video") : null;
-  const muggu=document.getElementById("muggu");
-  if(!hero || !art) return;
+  const video=document.getElementById("heroVideo");
+  if(!hero) return;
+
+  if(video){
+    const io=new IntersectionObserver(en=>{
+      en.forEach(e=>{ e.isIntersecting ? video.play().catch(()=>{}) : video.pause(); });
+    },{threshold:.01});
+    io.observe(hero);
+  }
+
+  if(RM || !matchMedia("(pointer:fine)").matches) return;
   let tx=0,ty=0,qx=0,qy=0;
   hero.addEventListener("mousemove", e=>{
     const r=hero.getBoundingClientRect();
@@ -265,9 +211,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   hero.addEventListener("mouseleave", ()=>{ tx=0; ty=0; });
   function tick(){
-    qx=lerp(qx,tx,.06); qy=lerp(qy,ty,.06);
-    if(photo) photo.style.transform = `translate3d(${(qx*9).toFixed(2)}px,${(qy*7).toFixed(2)}px,0)`;
-    if(muggu) muggu.style.transform = `translate3d(${(qx*-6).toFixed(2)}px,${(qy*-6).toFixed(2)}px,0)`;
+    qx=lerp(qx,tx,.05); qy=lerp(qy,ty,.05);
+    if(video) video.style.transform = `scale(1.06) translate3d(${(qx*1.2).toFixed(2)}%,${(qy*1.2).toFixed(2)}%,0)`;
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -312,7 +257,7 @@ function paintScroll(){
 
   // hero content lifts and fades away as you leave it
   if(heroIn){
-    const p = clamp(scrollY/(vh*0.85),0,1);
+    const p = clamp(scrollY/(vh*0.5),0,1);
     heroIn.style.transform = `translate3d(0,${(-p*70).toFixed(1)}px,0) scale(${(1-p*0.08).toFixed(3)})`;
     heroIn.style.opacity = (1-p*1.2).toFixed(3);
     if(heroCue) heroCue.style.opacity = (1-p*3.2).toFixed(3);
