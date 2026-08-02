@@ -2,7 +2,9 @@
 // Maneswar & Sameera — Wedding Invitation
 // ===================================================
 
-const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+// This invitation is meant to be experienced with its animations —
+// we intentionally do not defer to prefers-reduced-motion here.
+const RM = false;
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp = (a,b,t)=>a+(b-a)*t;
 const smooth = t=>t*t*(3-2*t);
@@ -242,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     slot.appendChild(i);
   };
   const ALT="Maneswar and Sameera";
-  put("heroArt","assets/img/cutouts/red-backdrop-cutout.png",ALT,true);
   put("midArt","assets/img/candid-laugh.jpg",ALT,false);
   put("bandFig","assets/img/bench-wide.jpg",ALT,false);
   put("closeArt","assets/img/hero-traditional.jpg",ALT,false);
@@ -253,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if(RM || !matchMedia("(pointer:fine)").matches) return;
   const hero=document.querySelector(".hero");
   const art=document.getElementById("heroArt");
-  const photo=art ? art.querySelector(".blend") : null;
+  const photo=art ? art.querySelector(".hero-video") : null;
   const muggu=document.getElementById("muggu");
   if(!hero || !art) return;
   let tx=0,ty=0,qx=0,qy=0;
@@ -289,23 +290,56 @@ document.addEventListener("DOMContentLoaded", () => {
 let SCROLL=0, DAY=0;
 const thread = document.getElementById("thread");
 const bar = document.getElementById("prog");
+const heroIn = document.querySelector(".hero-in");
+const heroCue = document.querySelector(".cue");
+const muhBig = document.querySelector(".muh .big");
+const parLayers = [...document.querySelectorAll("[data-par]")];
+let queuedScroll=false;
 
-function onScroll(){
-  const max = document.documentElement.scrollHeight - innerHeight;
+function paintScroll(){
+  queuedScroll=false;
+  const vh = innerHeight;
+  const max = document.documentElement.scrollHeight - vh;
   SCROLL = max>0 ? clamp(scrollY/max,0,1) : 0;
   DAY = smooth(clamp((SCROLL-0.30)/0.55,0,1));
   if(bar) bar.style.transform = `scaleX(${SCROLL.toFixed(4)})`;
+
   if(thread){
     const r = thread.getBoundingClientRect();
     const g = clamp((innerHeight*0.72 - r.top)/(r.height*0.9),0,1);
     thread.style.setProperty("--grow",(g*100).toFixed(1)+"%");
   }
+
+  // hero content lifts and fades away as you leave it
+  if(heroIn){
+    const p = clamp(scrollY/(vh*0.85),0,1);
+    heroIn.style.transform = `translate3d(0,${(-p*70).toFixed(1)}px,0) scale(${(1-p*0.08).toFixed(3)})`;
+    heroIn.style.opacity = (1-p*1.2).toFixed(3);
+    if(heroCue) heroCue.style.opacity = (1-p*3.2).toFixed(3);
+  }
+
+  // photographs drift at a different speed than the page around them
+  for(const el of parLayers){
+    const r = el.getBoundingClientRect();
+    if(r.bottom < -140 || r.top > vh+140) continue;
+    const c = (r.top + r.height/2 - vh/2)/vh;
+    const amt = parseFloat(el.dataset.par) || 1;
+    el.style.transform = `translate3d(0,${(-c*38*amt).toFixed(1)}px,0)`;
+  }
+
+  // the muhurtham time swells as it crosses the middle of the screen
+  if(muhBig){
+    const r = muhBig.getBoundingClientRect();
+    const c = Math.abs((r.top + r.height/2 - vh/2)/vh);
+    muhBig.style.transform = `scale(${(1 + clamp(.16 - c*.24, 0, .16)).toFixed(3)})`;
+  }
 }
-if(!RM){
-  addEventListener("scroll", onScroll, {passive:true});
-  addEventListener("resize", onScroll);
+function onScroll(){
+  if(!queuedScroll){ queuedScroll=true; requestAnimationFrame(paintScroll); }
 }
-onScroll();
+addEventListener("scroll", onScroll, {passive:true});
+addEventListener("resize", onScroll);
+paintScroll();
 
 /* ---------------- SKY: canvas atmosphere ---------------- */
 (function sky(){
